@@ -1,15 +1,19 @@
 use std::{
     ffi::CStr,
     path::Path,
-    sync::{atomic::Ordering, Arc, Mutex},
+    sync::{
+        atomic::{AtomicU64, AtomicUsize, Ordering},
+        Arc, Mutex,
+    },
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use clap::StructOpt;
 
 use crate::{
     driver::{
-        save_input, update_coverage, COMPARISON_OPERANDS, COV_THREADS, CRASHES_DIR,
-        ENABLE_COUNTERS, FAZI, FAZI_INITIALIZED, INPUTS_DIR, INPUTS_EXTENSION,
+        save_input, COMPARISON_OPERANDS, COV_THREADS, CRASHES_DIR, ENABLE_COUNTERS, FAZI,
+        FAZI_INITIALIZED, INPUTS_DIR, INPUTS_EXTENSION,
     },
     options::RuntimeOptions,
     sancov::reset_pc_guards,
@@ -315,4 +319,36 @@ pub extern "C" fn fazi_reset_coverage() {
         .lock()
         .expect("could not lock FAZI");
     fazi.clear_coverage();
+}
+
+#[no_mangle]
+/// Reset guard variables sent in user defined callback that measures code coverage
+/// Reset fazi internal coverage as well
+pub extern "C" fn fazi_log_stats() {
+    static mut last_iteration_count: usize = 0;
+    static mut last_time: u64 = 0;
+    let fazi = FAZI
+        .get()
+        .expect("FAZI not initialized")
+        .lock()
+        .expect("could not lock FAZI");
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_secs();
+
+    let coverage_size = fazi.coverage_size();
+    unsafe {
+        let time_diff = now - last_time;
+        let iterations_s: usize = (fazi.iterations - last_iteration_count) / time_diff as usize;
+        let iterations = fazi.iterations;
+
+        eprintln!(
+            "iterations {iterations}, iterations/s {iterations_s}, coverage size {coverage_size}"
+        );
+
+        // update static values
+        last_iteration_count = fazi.iterations;
+        last_time = now;
+    }
 }

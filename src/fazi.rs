@@ -12,8 +12,8 @@ use crate::{
 };
 
 use crate::driver::{
-    clear_coverage, poison_input, unpoison_input, update_coverage, COMPARISON_OPERANDS, COVERAGE,
-    COV_THREADS, FAZI_INITIALIZED, PC_INFO, U8_COUNTERS,
+    clear_coverage, coverage_size, poison_input, unpoison_input, update_coverage,
+    COMPARISON_OPERANDS, COVERAGE, COV_THREADS, FAZI_INITIALIZED, PC_INFO, U8_COUNTERS,
 };
 use crate::mutations::MutationStrategy;
 
@@ -222,6 +222,10 @@ impl<R: Rng + SeedableRng> Fazi<R> {
 
     pub fn clear_coverage(&mut self) {
         clear_coverage();
+    }
+
+    pub fn coverage_size(&self) -> usize {
+        return coverage_size();
     }
 
     /// Initialize the globals required for Fazi to work correctly

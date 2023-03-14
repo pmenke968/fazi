@@ -325,6 +325,26 @@ pub(crate) fn clear_coverage() {
     }
 }
 
+pub(crate) fn coverage_size() -> usize {
+    let mut size = 0;
+
+    size += COVERAGE
+        .get()
+        .expect("failed to get COVERAGE")
+        .lock()
+        .expect("failed to lock COVERAGE")
+        .len();
+
+    size += U8_COUNTERS
+        .get()
+        .expect("U8_COUNTERS not initialized")
+        .lock()
+        .expect("failed to lock U8_COUNTERS")
+        .len();
+
+    return size;
+}
+
 pub(crate) fn update_coverage() -> (usize, usize, usize) {
     let mut coverage = COVERAGE
         .get()
