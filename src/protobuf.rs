@@ -5,7 +5,8 @@ use once_cell::sync::OnceCell;
 use protobuf::{CodedOutputStream, Message};
 use rand::Rng;
 
-use crate::{Fazi, Mutable};
+use crate::fazi::Fazi;
+use crate::mutate::Mutable;
 #[cfg(feature = "protobuf")]
 impl<R: Rng> Fazi<R> {
     pub(crate) fn mutate_protobuf_input(&mut self) -> bool {

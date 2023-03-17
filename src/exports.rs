@@ -16,6 +16,9 @@ use crate::{
     Fazi,
 };
 
+#[cfg(feature = "protobuf")]
+use crate::proto_callback::mutate_protobuf_message;
+
 #[no_mangle]
 /// Main function for initializing the Fazi global state
 pub extern "C" fn fazi_initialize() {
@@ -28,6 +31,14 @@ pub extern "C" fn fazi_initialize() {
 
     FAZI.set(Mutex::new(fazi))
         .expect("FAZI already initialized");
+    // #[cfg(feature = "protobuf")]
+
+    let mut newfazi = FAZI
+    .get()
+    .expect("FAZI not initialized")
+    .lock()
+    .expect("could not lock FAZI");
+    newfazi.protobuf_mutate_callback = Some(mutate_protobuf_message);
 }
 
 #[no_mangle]
